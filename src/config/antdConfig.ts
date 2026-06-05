@@ -1,4 +1,9 @@
 import zhCN from "antdv-next/locale/zh_CN";
+import dayjs from "dayjs";
+import "dayjs/locale/zh-cn";
+
+// 设置 dayjs 中文语言
+dayjs.locale("zh-cn");
 
 // ──────────────────────────────────────────────────────────────
 // Ant Design Vue 全局配置

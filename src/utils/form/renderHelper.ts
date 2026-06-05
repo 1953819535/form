@@ -4,6 +4,7 @@ import {
   Select as ASelect,
   Checkbox as ACheckbox,
   Switch as ASwitch,
+  DatePicker as ADatePicker,
 } from "antdv-next";
 import type { SlotRender, ComponentLike, SlotScope } from "./types";
 
@@ -16,6 +17,8 @@ export const componentMap: Record<string, Component> = {
   ACheckbox,
   ASwitch,
   ATextarea: AInput.TextArea,
+  ADatePicker,
+  ARangePicker: ADatePicker.RangePicker,
 };
 
 // ──────────────────────────────────────────────────────────────
