@@ -46,7 +46,6 @@ const result = await promise;   // 提交时 resolve
 | `close`     | `() => void`    | 主动关闭弹窗（走关闭动画）                                 |
 | `validate`  | `() => Promise` | 手动触发校验                                               |
 | `formState` | `T`             | 响应式表单数据引用                                         |
-| `formRef`   | `Ref<any>`      | antdv Form 实例引用                                        |
 
 ---
 
@@ -96,153 +95,279 @@ type DynamicConfig<T, R> = R | ((formData: T) => R)
 
 ---
 
-## 示例
+## 完整示例
 
-### 1. 基本 Modal
+以下示例按功能分类，涵盖所有特性：
+
+### 一、基础用法
+
+#### 1. 基本 Modal
 
 ```ts
 const { promise } = createFormModal<LoginForm>({
-  model: { title: '登录' },
+  model: { title: "登录", width: 520 },
   fields: [
-    { formItem: { name: 'username', label: '用户名' }, component: { is: 'AInput' } },
-    { formItem: { name: 'password', label: '密码' }, component: { is: 'AInput' } },
+    { formItem: { name: "username", label: "用户名" }, component: { is: "AInput", placeholder: "请输入用户名" } },
+    { formItem: { name: "password", label: "密码" }, component: { is: "AInput", placeholder: "请输入密码" } },
   ],
-})
-const data = await promise
+});
+promise.then((data) => AMessage.success(`登录成功：${data.username}`));
 ```
 
-### 2. 基本 Drawer（自带按钮）
+#### 2. 基本 Drawer（自带按钮）
 
 Drawer 默认渲染「取消」「确定」底部按钮：
 
 ```ts
 const { promise } = createFormDrawer<LoginForm>({
-  drawer: { title: '登录', placement: 'right', size: 400 },
+  drawer: { title: "登录", placement: "right", size: 400 },
   fields: [
-    { formItem: { name: 'username', label: '用户名' }, component: { is: 'AInput' } },
-    { formItem: { name: 'password', label: '密码' }, component: { is: 'AInput' } },
+    { formItem: { name: "username", label: "用户名" }, component: { is: "AInput" } },
+    { formItem: { name: "password", label: "密码" }, component: { is: "AInput" } },
   ],
-})
+});
 ```
 
-### 3. 带校验规则
+#### 3. 带初始值和校验规则
 
 ```ts
 const { promise } = createFormModal<UserForm>({
   model: { title: "编辑用户" },
-  initialValues: { name: "", email: "", role: "user" },
+  initialValues: { name: "张三", email: "zhangsan@example.com", role: "user" },
   rules: {
     name: [{ required: true, message: "请输入姓名" }],
-    email: [{ required: true, message: "请输入邮箱" }, { type: "email" }],
+    email: [{ required: true, message: "请输入邮箱" }, { type: "email", message: "邮箱格式不正确" }],
   },
-  fields: [...],
+  fields: [
+    { formItem: { name: "name", label: "姓名" }, component: { is: "AInput" } },
+    { formItem: { name: "email", label: "邮箱" }, component: { is: "AInput" } },
+    { formItem: { name: "role", label: "角色" }, component: { is: "ASelect", options: [...] } },
+  ],
 });
 ```
 
-### 4. visible 显隐
+---
+
+### 二、动态配置
+
+#### 4. visible 显隐控制
 
 ```ts
 {
   formItem: { name: "company", label: "公司名称" },
   visible: (formData) => formData.type === "business",
-  component: { is: "AInput" },
+  component: { is: "AInput", placeholder: "请输入公司名称" },
 }
 ```
 
-### 5. 动态校验规则
+#### 5. 动态校验规则
 
 ```ts
 rules: (formData) => ({
-  name: [{ required: true }],
-  company: formData.type === "business" ? [{ required: true }] : [],
+  name: [{ required: true, message: "请输入姓名" }],
+  company: formData.type === "business" ? [{ required: true, message: "请输入公司名称" }] : [],
 }),
 ```
 
-### 6. 事件拦截联动
+#### 6. 动态 fields（条件显示）
+
+```ts
+fields: (formData) => {
+  const fields: FormField<ContactForm>[] = [
+    { formItem: { name: "type", label: "类型" }, component: { is: "ASelect", options: [...] } },
+    { formItem: { name: "name", label: "姓名" }, component: { is: "AInput" } },
+  ];
+  if (formData.type === "business") {
+    fields.push({ formItem: { name: "company", label: "公司名称" }, component: { is: "AInput" } });
+  }
+  return fields;
+},
+```
+
+---
+
+### 三、事件与联动
+
+#### 7. 事件拦截联动
 
 `onXxx` 事件自动注入 `formState` 作为最后一个参数：
 
 ```ts
 component: {
   is: "ASelect",
-  onChange: (value, option, formData) => {
-    formData.memo = `切换为 ${value}`;
+  options: [...],
+  onChange: (value: string, _option: any, formData: LinkageForm) => {
+    formData.nickname = "";
+    formData.memo = `已将角色切换为：${value === "admin" ? "管理员" : "普通用户"}`;
   },
 },
 ```
 
-### 7. models 多重绑定
+#### 8. onBlur 等其他事件
 
 ```ts
+component: {
+  is: "AInput",
+  placeholder: "请输入昵称",
+  onBlur: (_event: FocusEvent, formData: LinkageForm) => {
+    if (formData.nickname) {
+      formData.nickname = formData.nickname.toUpperCase();
+    }
+  },
+},
+```
+
+---
+
+### 四、特殊绑定
+
+#### 9. models 多重绑定
+
+当一个组件需要同时绑定多个表单字段时：
+
+```ts
+// FullName.vue 内部使用 defineModel 多实例
+const firstname = defineModel("firstname", { type: String });
+const lastname = defineModel("lastname", { type: String });
+
+// 使用
 component: {
   is: FullName,
   models: { firstname: "firstName", lastname: "lastName" },
 },
 ```
 
-### 8. 自定义 modelPropName
+#### 10. 自定义 modelPropName（Checkbox / Switch）
 
 ```ts
 component: { is: "ACheckbox", modelPropName: "checked" },
 component: { is: "ASwitch", modelPropName: "checked" },
 ```
 
-### 9. 栅格排版
+---
+
+### 五、布局与排版
+
+#### 11. 栅格排版
 
 ```ts
 form: { row: { gutter: 16 } },
 fields: [
   { formItem: { name: "firstName", label: "名" }, col: { span: 12 }, component: { is: "AInput" } },
   { formItem: { name: "lastName", label: "姓" }, col: { span: 12 }, component: { is: "AInput" } },
+  { formItem: { name: "email", label: "邮箱" }, col: { span: 24 }, component: { is: "AInput" } },
 ],
 ```
 
-### 10. 容器插槽自定义
+---
 
-Modal / Drawer 插槽自动注入 `SlotScope`（formData / submit / cancel / loading）：
+### 六、插槽自定义
+
+#### 12. 容器插槽（Modal / Drawer footer）
+
+Modal / Drawer 插槽自动注入 `SlotScope`：
 
 ```ts
-// Modal footer
 model: {
-  title: "插槽示例",
+  title: "自定义 footer",
   slots: {
     footer: ({ submit, cancel, loading }) =>
-      h("div", [h(AButton, { onClick: cancel }, () => "取消"), h(AButton, { onClick: submit, loading }, () => "确认")]),
+      h("div", { style: "display: flex; justify-content: space-between" }, [
+        h(AButton, { danger: true, onClick: cancel }, () => "危险取消"),
+        h(AButton, { type: "primary", onClick: submit, loading }, () => "确认提交"),
+      ]),
   },
 },
 
-// Drawer footer（覆盖默认按钮）
+// Drawer 同理
 drawer: {
   title: "自定义 footer",
+  placement: "left",
   slots: {
     footer: ({ submit, cancel, loading }) => h("div", [...]),
   },
 },
 ```
 
-### 11. 主动关闭
+#### 13. Form 级插槽（prefix / suffix）
 
 ```ts
-const { promise, close } = createFormModal({ ... });
-setTimeout(() => close(), 3000); // 3秒后关闭，走关闭动画
-
-promise.catch(() => console.log("用户取消"));
+form: {
+  layout: "vertical",
+  slots: {
+    prefix: () => h("p", { style: "color: #999; margin-bottom: 16px" }, "请填写以下信息"),
+    suffix: () => h("p", { style: "color: #999; margin-top: 8px" }, "带 * 为必填项"),
+  },
+},
 ```
 
-### 12. onSubmit 异步提交
-
-`onSubmit` 抛出异常时会自动显示错误提示并保持弹窗，不抛异常则正常关闭：
+#### 14. FormItem 级插槽（extra）
 
 ```ts
-const { promise } = createFormModal<RegisterForm>({
-  model: { title: "注册" },
-  fields: [...],
-  rules: { email: [{ required: true }] },
-  onSubmit: async (formData) => {
-    await api.register(formData);      // 接口报错会自动抛异常
-    // 正常返回 → 弹窗关闭 → promise resolve
+formItem: {
+  name: "username",
+  label: "用户名",
+  slots: {
+    extra: () => h("span", { style: "color: #999" }, "4-20位字母数字"),
   },
+},
+```
+
+#### 15. Component 级插槽（suffix）
+
+```ts
+component: {
+  is: "AInput",
+  placeholder: "请输入用户名",
+  slots: {
+    suffix: () => h("span", "👤"),
+  },
+},
+```
+
+---
+
+### 七、异步与控制
+
+#### 16. onSubmit 异步提交
+
+`onSubmit` 抛出异常时会自动显示错误提示并保持弹窗：
+
+```ts
+onSubmit: async (formData) => {
+  await new Promise((r) => setTimeout(r, 1000));
+  if (formData.code !== "1234") {
+    throw new Error("验证码错误，请重新输入");
+  }
+},
+```
+
+#### 17. 主动关闭 + formState
+
+```ts
+const { promise, close, validate, formState } = createFormModal<LoginForm>({
+  model: { title: "外部控制" },
+  fields: [...],
 });
+
+// 3秒后自动关闭
+setTimeout(() => close(), 3000);
+
+// 访问响应式表单数据
+console.log("formState:", formState);
+
+promise
+  .then((data) => AMessage.success(`提交成功：${data.username}`))
+  .catch(() => AMessage.info("弹窗已关闭"));
+```
+
+#### 18. 处理用户取消
+
+```ts
+const { promise } = createFormModal<LoginForm>({ ... });
+promise
+  .then((data) => AMessage.success(`提交成功：${data.username}`))
+  .catch(() => AMessage.info("用户取消了操作"));
 ```
 
 ---
@@ -272,6 +397,26 @@ Modal / Drawer 非 default 插槽自动注入的作用域对象：
 
 ---
 
+## 全局配置共享
+
+弹窗组件通过 `AConfigProvider` 包裹，与主应用共享配置：
+
+```ts
+// src/config/antdConfig.ts
+export const antdConfig = {
+  locale: zhCN,  // 中文
+  // direction: 'rtl',
+  // theme: { ... },
+};
+
+// 主应用 App.vue
+<a-config-provider v-bind="antdConfig">
+
+// 弹窗内部自动包裹 AConfigProvider，继承相同配置
+```
+
+---
+
 ## 生命周期
 
 ```
@@ -282,4 +427,24 @@ Modal / Drawer 非 default 插槽自动注入的作用域对象：
   → 提交：校验 → onSubmit → resolve → 关闭动画 → 销毁 DOM
   → 取消：reject → 关闭动画 → afterClose → 销毁 DOM
   → close()：设置 open=false → 走关闭动画 → reject → 销毁 DOM
+```
+
+---
+
+## 文件结构
+
+```
+src/utils/form/
+├── index.ts              # 统一导出
+├── types.ts              # 类型定义
+├── createFormModal.ts    # Modal 入口
+├── createFormDrawer.ts   # Drawer 入口
+├── mountHelper.ts        # 挂载逻辑
+├── modalContainer.ts     # Modal 容器组件
+├── drawerContainer.ts    # Drawer 容器组件
+├── renderForm.ts         # 表单渲染组件
+└── renderHelper.ts       # 渲染辅助函数
+
+src/config/
+└── antdConfig.ts         # 全局配置共享
 ```

@@ -1,4 +1,4 @@
-import { createApp, ref } from "vue";
+import { createApp } from "vue";
 import type { FormDialogReturn } from "./types";
 
 export const mountFormDialog = <T extends Record<string, any>>(
@@ -17,26 +17,24 @@ export const mountFormDialog = <T extends Record<string, any>>(
     rejectPromise = reject;
   });
 
-  const formRef = ref<any>();
-
-  const validate = () => {
-    if (formRef.value) {
-      return formRef.value.validate();
-    }
-    return Promise.reject(new Error("表单实例未就绪"));
-  };
-
   let settled = false;
 
   const close = () => {
     app._instance?.exposed?.setOpen(false);
   };
 
+  const validate = () => {
+    const exposed = app._instance?.exposed;
+    if (exposed?.validate) {
+      return exposed.validate();
+    }
+    return Promise.reject(new Error("表单实例未就绪"));
+  };
+
   // 暴露给容器组件的回调
   const containerProps = {
     ...props,
     formState,
-    formRef,
     onClose: () => {
       if (!settled) {
         settled = true;
@@ -78,6 +76,5 @@ export const mountFormDialog = <T extends Record<string, any>>(
     close,
     validate,
     formState,
-    formRef,
-  };
+  } as FormDialogReturn<T>;
 };

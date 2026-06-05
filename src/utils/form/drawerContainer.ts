@@ -1,8 +1,9 @@
 import { defineComponent, h, ref, computed, type PropType } from "vue";
-import { Drawer as ADrawer, Button as AButton } from "antdv-next";
+import { Drawer as ADrawer, Button as AButton, ConfigProvider as AConfigProvider } from "antdv-next";
 import type { DrawerConfig, SlotScope } from "./types";
-import { normalizeSlots } from "./renderHelper";
+import { normalizeSlots, processSlotsWithScope } from "./renderHelper";
 import RenderForm from "./renderForm";
+import { antdConfig } from "@/config/antdConfig";
 
 const DefaultFooter = ({ submit, cancel, loading }: SlotScope<any>) =>
   h("div", { style: "display: flex; justify-content: flex-end; gap: 8px" }, [
@@ -35,6 +36,7 @@ const DrawerContainer = defineComponent({
       setOpen: (val: boolean) => {
         open.value = val;
       },
+      validate: () => renderFormRef.value?.formRef?.validate(),
     });
     const renderFormRef = ref<any>();
     const loading = ref(false);
@@ -69,55 +71,54 @@ const DrawerContainer = defineComponent({
         props.drawer || {};
       const resolvedDrawerSlots = normalizeSlots(drawerSlotsConfig) || {};
 
-      // 处理 Drawer 插槽：注入 slotScope
-      const processedDrawerSlots: Record<string, any> = {};
-      Object.entries(resolvedDrawerSlots).forEach(([key, renderFn]) => {
-        processedDrawerSlots[key] = (...args: any[]) => {
-          return (renderFn as Function)(slotScope.value, ...args);
-        };
-      });
-
       return h(
-        ADrawer,
-        {
-          ...restDrawerProps,
-          open: open.value,
-          onClose: handleCancel,
-          afterOpenChange: (isOpen: boolean) => {
-            if (!isOpen) {
-              handleAfterClose();
-            }
-          },
-        },
+        AConfigProvider,
+        antdConfig,
         {
           default: () =>
-            h(RenderForm, {
-              ref: renderFormRef,
-              formState: props.formState,
-              fields: props.fields,
-              rules: props.rules,
-              form: props.form,
-              onSubmit: props.onSubmit,
-              onResolve: (data: any) => {
-                open.value = false;
-                emit("resolve", data);
+            h(
+              ADrawer,
+              {
+                ...restDrawerProps,
+                open: open.value,
+                onClose: handleCancel,
+                afterOpenChange: (isOpen: boolean) => {
+                  if (!isOpen) {
+                    handleAfterClose();
+                  }
+                },
               },
-              onReject: (err: Error) => {
-                open.value = false;
-                emit("reject", err);
+              {
+                default: () =>
+                  h(RenderForm, {
+                    ref: renderFormRef,
+                    formState: props.formState,
+                    fields: props.fields,
+                    rules: props.rules,
+                    form: props.form,
+                    onSubmit: props.onSubmit,
+                    onResolve: (data: any) => {
+                      open.value = false;
+                      emit("resolve", data);
+                    },
+                    onReject: (err: Error) => {
+                      open.value = false;
+                      emit("reject", err);
+                    },
+                  }),
+                footer: resolvedDrawerSlots.footer
+                  ? (...args: any[]) =>
+                      (resolvedDrawerSlots.footer as Function)(
+                        slotScope.value,
+                        ...args,
+                      )
+                  : () => DefaultFooter(slotScope.value),
+                ...(() => {
+                  const { footer: _, ...rest } = processSlotsWithScope(resolvedDrawerSlots, slotScope.value);
+                  return rest;
+                })(),
               },
-            }),
-          footer: resolvedDrawerSlots.footer
-            ? (...args: any[]) =>
-                (resolvedDrawerSlots.footer as Function)(
-                  slotScope.value,
-                  ...args,
-                )
-            : () => DefaultFooter(slotScope.value),
-          ...(() => {
-            const { footer: _, ...rest } = processedDrawerSlots;
-            return rest;
-          })(),
+            ),
         },
       );
     };

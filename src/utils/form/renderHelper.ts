@@ -5,7 +5,7 @@ import {
   Checkbox as ACheckbox,
   Switch as ASwitch,
 } from "antdv-next";
-import type { SlotRender, ComponentLike } from "./types";
+import type { SlotRender, ComponentLike, SlotScope } from "./types";
 
 // ──────────────────────────────────────────────────────────────
 // 常用组件映射表
@@ -38,4 +38,20 @@ export const resolveComponent = (is: ComponentLike): Component => {
     return componentMap[is as keyof typeof componentMap]!;
   }
   return is as Component;
+};
+
+// ──────────────────────────────────────────────────────────────
+// 处理容器插槽：注入 slotScope
+// ──────────────────────────────────────────────────────────────
+export const processSlotsWithScope = (
+  resolvedSlots: Record<string, any>,
+  slotScope: SlotScope<any>,
+): Record<string, any> => {
+  const processed: Record<string, any> = {};
+  Object.entries(resolvedSlots).forEach(([key, renderFn]) => {
+    processed[key] = (...args: any[]) => {
+      return (renderFn as Function)(slotScope, ...args);
+    };
+  });
+  return processed;
 };

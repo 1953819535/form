@@ -1,4 +1,4 @@
-import type { Component, VNodeChild, Ref } from "vue";
+import type { Component, VNodeChild } from "vue";
 import type { ModalProps, FormProps, FormItemProps } from "antdv-next";
 import type { Rule } from "antdv-next/dist/form/types";
 
@@ -6,7 +6,7 @@ import type { Rule } from "antdv-next/dist/form/types";
 // 组件映射与标识类型
 // ──────────────────────────────────────────────────────────────
 
-export type SlotRender<T = any> = (scope?: SlotScope<T>) => VNodeChild;
+export type SlotRender<T = any> = (scope: SlotScope<T>) => VNodeChild;
 
 export type ComponentLike = Component | string;
 
@@ -116,7 +116,6 @@ export interface FormDialogReturn<T> {
   close: () => void;
   validate: () => Promise<any>;
   formState: T;
-  formRef: Ref<any>;
 }
 
 // ──────────────────────────────────────────────────────────────

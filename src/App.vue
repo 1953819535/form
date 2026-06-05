@@ -1,10 +1,9 @@
 <script setup>
-import zhCN from "antdv-next/locale/zh_CN";
-
+import { antdConfig } from "@/config/antdConfig";
 import Test from "./Test.vue";
 </script>
 <template>
-  <a-config-provider :locale="zhCN">
+  <a-config-provider v-bind="antdConfig">
     <Test />
   </a-config-provider>
 </template>

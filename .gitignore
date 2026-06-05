@@ -42,3 +42,5 @@ __screenshots__/
 .vscode
 llms-full.txt
 llms.txt
+
+components.d.ts

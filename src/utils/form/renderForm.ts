@@ -89,13 +89,8 @@ const RenderForm = defineComponent({
       }
     };
 
-    // ── 取消 ──
-    const handleCancel = () => {
-      emit("reject", new Error("用户取消"));
-    };
-
     // 暴露给父容器
-    expose({ handleSubmit, handleCancel, formRef, loading });
+    expose({ handleSubmit, formRef, loading });
 
     // ── 渲染单个字段 ──
     const renderFieldNode = (field: FormField<any>) => {

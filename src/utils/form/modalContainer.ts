@@ -1,8 +1,9 @@
 import { defineComponent, h, ref, computed, type PropType } from "vue";
-import { Modal as AModal } from "antdv-next";
+import { Modal as AModal, ConfigProvider as AConfigProvider } from "antdv-next";
 import type { ModalConfig } from "./types";
-import { normalizeSlots } from "./renderHelper";
+import { normalizeSlots, processSlotsWithScope } from "./renderHelper";
 import RenderForm from "./renderForm";
+import { antdConfig } from "@/config/antdConfig";
 
 // ──────────────────────────────────────────────────────────────
 // Modal 容器组件
@@ -29,6 +30,7 @@ const ModalContainer = defineComponent({
       setOpen: (val: boolean) => {
         open.value = val;
       },
+      validate: () => renderFormRef.value?.formRef?.validate(),
     });
     const renderFormRef = ref<any>();
     const loading = ref(false);
@@ -63,42 +65,44 @@ const ModalContainer = defineComponent({
       const resolvedModalSlots = normalizeSlots(modalSlotsConfig) || {};
 
       // 处理 Modal 插槽：注入 slotScope
-      const processedModalSlots: Record<string, any> = {};
-      Object.entries(resolvedModalSlots).forEach(([key, renderFn]) => {
-        processedModalSlots[key] = (...args: any[]) => {
-          return (renderFn as Function)(slotScope.value, ...args);
-        };
-      });
+      const processedModalSlots = processSlotsWithScope(resolvedModalSlots, slotScope.value);
 
       return h(
-        AModal,
-        {
-          ...restModelProps,
-          open: open.value,
-          confirmLoading: loading.value,
-          onOk: handleSubmit,
-          onCancel: handleCancel,
-          afterClose: handleAfterClose,
-        },
+        AConfigProvider,
+        antdConfig,
         {
           default: () =>
-            h(RenderForm, {
-              ref: renderFormRef,
-              formState: props.formState,
-              fields: props.fields,
-              rules: props.rules,
-              form: props.form,
-              onSubmit: props.onSubmit,
-              onResolve: (data: any) => {
-                open.value = false;
-                emit("resolve", data);
+            h(
+              AModal,
+              {
+                ...restModelProps,
+                open: open.value,
+                confirmLoading: loading.value,
+                onOk: handleSubmit,
+                onCancel: handleCancel,
+                afterClose: handleAfterClose,
               },
-              onReject: (err: Error) => {
-                open.value = false;
-                emit("reject", err);
+              {
+                default: () =>
+                  h(RenderForm, {
+                    ref: renderFormRef,
+                    formState: props.formState,
+                    fields: props.fields,
+                    rules: props.rules,
+                    form: props.form,
+                    onSubmit: props.onSubmit,
+                    onResolve: (data: any) => {
+                      open.value = false;
+                      emit("resolve", data);
+                    },
+                    onReject: (err: Error) => {
+                      open.value = false;
+                      emit("reject", err);
+                    },
+                  }),
+                ...processedModalSlots,
               },
-            }),
-          ...processedModalSlots,
+            ),
         },
       );
     };
