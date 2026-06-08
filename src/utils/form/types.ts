@@ -63,6 +63,7 @@ export interface ComponentConfig<
 > {
   is: ComponentLike;
   modelPropName?: string;
+  trigger?: 'immediate' | 'enter';  // 自动搜索触发时机
   models?: { [prop: string]: keyof T & string };
   slots?: Record<string, SlotRender | VNodeChild>;
   [key: string]: any;

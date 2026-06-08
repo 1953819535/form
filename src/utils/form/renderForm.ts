@@ -1,4 +1,4 @@
-import { defineComponent, h, ref, computed, toRaw, type PropType } from "vue";
+import { defineComponent, h, ref, computed, toRaw, nextTick, type PropType } from "vue";
 import {
   Form as AForm,
   FormItem as AFormItem,
@@ -7,7 +7,7 @@ import {
   message as AMessage,
 } from "antdv-next";
 import type { Rule } from "antdv-next/dist/form/types";
-import type { FormConfig, FormField, DynamicConfig } from "./types";
+import type { FormConfig, FormField, DynamicConfig, ComponentLike } from "./types";
 import { normalizeSlots, resolveComponent } from "./renderHelper";
 
 // ──────────────────────────────────────────────────────────────
@@ -44,9 +44,27 @@ const RenderForm = defineComponent({
       >,
       default: undefined,
     },
+    onAutoSearch: {
+      type: Function as PropType<(formData: any) => void>,
+      default: undefined,
+    },
   },
   emits: ["resolve", "reject"],
   setup(props, { emit, expose }) {
+    // ── 自动搜索触发规则 ──
+    const IMMEDIATE_COMPONENTS = [
+      'ASelect', 'ADatePicker', 'ARangePicker',
+      'ACheckbox', 'ASwitch', 'ARadioGroup'
+    ];
+    const ENTER_COMPONENTS = ['AInput', 'AInputNumber', 'ATextarea'];
+
+    const getTriggerType = (is: ComponentLike): 'immediate' | 'enter' => {
+      const name = typeof is === 'string' ? is : (is as any).name || '';
+      if (IMMEDIATE_COMPONENTS.includes(name)) return 'immediate';
+      if (ENTER_COMPONENTS.includes(name)) return 'enter';
+      return 'immediate';
+    };
+
     const formRef = ref<any>();
     const loading = ref(false);
 
@@ -138,6 +156,30 @@ const RenderForm = defineComponent({
           componentProps[key] = val;
         }
       });
+
+      // ── 自动搜索事件绑定 ──
+      if (props.onAutoSearch) {
+        const trigger = field.component.trigger ?? getTriggerType(field.component.is);
+
+        if (trigger === 'immediate') {
+          // 保存原有的 onChange
+          const originalOnChange = eventProps.onChange;
+          eventProps.onChange = (...args: any[]) => {
+            if (originalOnChange) originalOnChange(...args);
+            // 延迟触发，确保 v-model 已更新
+            nextTick(() => {
+              props.onAutoSearch?.(toRaw(props.formState));
+            });
+          };
+        } else if (trigger === 'enter') {
+          // onPressEnter 事件
+          const originalOnPressEnter = restProps.onPressEnter;
+          eventProps.onPressEnter = (...args: any[]) => {
+            if (originalOnPressEnter) originalOnPressEnter(...args, props.formState);
+            props.onAutoSearch?.(toRaw(props.formState));
+          };
+        }
+      }
 
       // Component 渲染
       const resolvedComponentSlots = normalizeSlots(componentSlotsConfig);

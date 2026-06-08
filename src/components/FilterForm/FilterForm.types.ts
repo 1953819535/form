@@ -36,8 +36,8 @@ export interface FilterFormProps<
   resetButtonText?: string;
   buttonColSpan?: number;
 
-  // 防抖配置
-  debounce?: number | false;
+  // 自动搜索
+  onAutoSearch?: (formData: T) => void;
 }
 
 // 筛选组件 Emits
@@ -48,4 +48,5 @@ export interface FilterFormEmits<
   search: (value: T) => void;
   reset: (value: T) => void;
   collapseChange: (collapsed: boolean) => void;
+  autoSearch: (value: T) => void;
 }

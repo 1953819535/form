@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="tsx">
 import { ref } from "vue";
 import { h } from "vue";
 import { Button as AButton, message as AMessage } from "antdv-next";
@@ -9,6 +9,15 @@ import {
 } from "@/utils/form";
 import FullName from "@/components/FullName.vue";
 import { FilterForm, type FilterField } from "@/components/FilterForm";
+import {
+  Demo1Basic,
+  Demo2NoPagination,
+  Demo3DrawerMultiSelect,
+  Demo4CustomError,
+  Demo5Transform,
+  Demo6TableProps,
+  Demo7CustomContent,
+} from "@/components/Crud/demos";
 
 // ──────────────────────────────────────────────────────────────
 // 基础类型定义
@@ -816,6 +825,7 @@ const handleModal12 = () => {
         :fields="filterFields"
         @search="handleFilterSearch"
         @reset="handleFilterReset"
+        :on-auto-search="handleFilterSearch"
       />
     </div>
 
@@ -872,6 +882,19 @@ const handleModal12 = () => {
         </template>
       </FilterForm>
     </div>
+
+    <h2>createFormModal / createFormDrawer 功能示例</h2>
+
+    <!-- Crud 组件示例 -->
+    <h2>Crud 组件示例</h2>
+
+    <Demo1Basic />
+    <Demo2NoPagination />
+    <Demo3DrawerMultiSelect />
+    <Demo4CustomError />
+    <Demo5Transform />
+    <Demo6TableProps />
+    <Demo7CustomContent />
 
     <h2>createFormModal / createFormDrawer 功能示例</h2>
 

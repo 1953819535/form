@@ -31,7 +31,7 @@ const props = withDefaults(
     searchButtonText?: string;
     resetButtonText?: string;
     buttonColSpan?: number;
-    debounce?: number | false;
+    onAutoSearch?: (formData: any) => void;
   }>(),
   {
     layout: "inline",
@@ -45,7 +45,6 @@ const props = withDefaults(
     showResetButton: true,
     searchButtonText: "搜索",
     resetButtonText: "重置",
-    debounce: 300,
   },
 );
 
@@ -108,17 +107,9 @@ watch(
 
 // ── 动态计算当前字段列表 ──
 const currentFields = computed(() => {
-  const fields =
-    typeof props.fields === "function"
-      ? props.fields(formData.value)
-      : props.fields;
-
-  // 根据 visible 过滤
-  return fields.filter((field: FilterField<any>) => {
-    if (field.visible === undefined) return true;
-    if (typeof field.visible === "boolean") return field.visible;
-    return field.visible(formData.value);
-  });
+  return typeof props.fields === "function"
+    ? props.fields(formData.value)
+    : props.fields;
 });
 
 // ── 展开收起时显示的字段 ──
@@ -191,8 +182,8 @@ const renderActions = () => {
   if (needCollapseButton.value) {
     buttons.push(
       h(AButton, { type: "link", onClick: toggleCollapse }, () => [
-        collapsed.value ? "展开" : "收起",
         h(collapsed.value ? DownOutlined : UpOutlined),
+        collapsed.value ? " 展开" : " 收起",
       ]),
     );
   }
@@ -211,7 +202,7 @@ const renderActions = () => {
           :key="field.formItem.name"
           :span="field.col?.span ?? colSpan"
         >
-          <RenderForm :form-state="formData" :fields="[field]" />
+          <RenderForm :form-state="formData" :fields="[field]" :on-auto-search="onAutoSearch" />
         </ACol>
 
         <!-- 操作按钮 -->
@@ -233,7 +224,7 @@ const renderActions = () => {
       <!-- inline 布局 -->
       <template v-else>
         <template v-for="field in visibleFields" :key="field.formItem.name">
-          <RenderForm :form-state="formData" :fields="[field]" />
+          <RenderForm :form-state="formData" :fields="[field]" :on-auto-search="onAutoSearch" />
         </template>
 
         <AFormItem class="filter-form-actions-inline">
@@ -266,10 +257,6 @@ export default defineComponent({
   margin-bottom: 16px;
 }
 
-.filter-form :deep(.ant-form-item) {
-  margin-right: 16px;
-}
-
 .filter-form-actions {
   display: flex;
   align-items: flex-end;
@@ -278,5 +265,14 @@ export default defineComponent({
 
 .filter-form-actions-inline {
   margin-bottom: 0;
+}
+
+/* 操作按钮间距 */
+.filter-form-actions :deep(.ant-space) {
+  gap: 8px;
+}
+
+.filter-form-actions-inline :deep(.ant-space) {
+  gap: 8px;
 }
 </style>
