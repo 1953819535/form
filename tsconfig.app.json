@@ -17,6 +17,8 @@
 
     // JSX support for Vue
     "jsx": "preserve",
-    "jsxImportSource": "vue"
+    "jsxImportSource": "vue",
+
+    "types": ["vite-plugin-vue-layouts/client"]
   }
 }
