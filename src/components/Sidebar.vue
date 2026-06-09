@@ -6,19 +6,24 @@ import SidebarItem from "./SidebarItem.vue";
 const route = useRoute();
 const router = useRouter();
 
-interface MenuItem {
+type MenuItem = {
   key: string;
   title: string;
   order?: number;
   redirect?: string;
   children?: MenuItem[];
-}
+};
 
 const menuTree = computed(() => {
   const routes = router.getRoutes();
 
+  // 过滤：需要有 title，不能是动态路由，且 hideMenu 不为 true
   const allRoutes = routes.filter(
-    (r) => r.meta?.title && !r.path.includes(":") && !r.path.includes("*"),
+    (r) =>
+      r.meta?.title &&
+      !r.path.includes(":") &&
+      !r.path.includes("*") &&
+      !r.meta?.hideMenu,
   );
 
   // 1. 扁平去重

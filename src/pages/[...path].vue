@@ -1,3 +1,11 @@
+<script setup lang="ts">
+definePage({
+  meta: {
+    hideMenu: true,
+  },
+});
+</script>
+
 <template>
   <div class="not-found">
     <h2>404 - 页面未找到</h2>

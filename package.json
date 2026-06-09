@@ -1,8 +1,9 @@
 {
-  "name": "createform",
+  "name": "vue3-admin-starter",
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "description": "Vue3 后台系统快速开发模板",
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",

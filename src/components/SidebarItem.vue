@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { useRouter, useRoute } from "vue-router";
 
-interface MenuItem {
+type MenuItem = {
   key: string;
   title: string;
   order?: number;
   redirect?: string;
   children?: MenuItem[];
-}
+};
 
 const props = defineProps<{
   item: MenuItem;
