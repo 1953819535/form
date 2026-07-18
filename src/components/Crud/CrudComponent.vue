@@ -151,12 +151,6 @@ export default defineComponent({
   gap: 16px;
 }
 
-.crud-filter {
-  background: #fafafa;
-  padding: 16px;
-  border-radius: 4px;
-}
-
 .crud-toolbar {
   display: flex;
   justify-content: space-between;

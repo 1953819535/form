@@ -48,6 +48,11 @@ const RenderForm = defineComponent({
       type: Function as PropType<(formData: any) => void>,
       default: undefined,
     },
+    // 不包裹外层 AForm，仅渲染字段节点（用于外层已有 AForm 的场景，如 FilterForm inline 布局）
+    noWrapper: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ["resolve", "reject"],
   setup(props, { emit, expose }) {
@@ -230,6 +235,11 @@ const RenderForm = defineComponent({
         row ? h(ARow, row, () => fieldNodes) : fieldNodes,
         ...(suffix ? [suffix()] : []),
       ];
+
+      // noWrapper 模式：直接返回子节点，不包裹 AForm
+      if (props.noWrapper) {
+        return formChildren;
+      }
 
       return h(
         AForm,

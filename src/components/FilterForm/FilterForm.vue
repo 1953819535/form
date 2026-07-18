@@ -53,6 +53,7 @@ const emit = defineEmits<{
   search: [value: any];
   reset: [value: any];
   collapseChange: [collapsed: boolean];
+  autoSearch: [value: any];
 }>();
 
 // ── 筛选值状态 ──
@@ -141,6 +142,12 @@ const handleSearchImmediate = () => {
   emit("search", toRaw(formData.value));
 };
 
+// ── 自动搜索（包装 onAutoSearch prop，同时 emit autoSearch 事件） ──
+const handleAutoSearch = (formData: any) => {
+  props.onAutoSearch?.(formData);
+  emit("autoSearch", toRaw(formData));
+};
+
 // ── 重置 ──
 const handleReset = () => {
   formData.value = {
@@ -194,20 +201,32 @@ const renderActions = () => {
 
 <template>
   <div class="filter-form">
-    <AForm :model="formData" layout="inline">
+    <AForm
+      :model="formData"
+      :layout="layout === 'grid' ? 'horizontal' : 'inline'"
+    >
       <!-- 栅格布局 -->
-      <ARow v-if="layout === 'grid'" :gutter="gutter" style="width: 100%">
+      <ARow
+        v-if="layout === 'grid'"
+        :gutter="gutter"
+        class="filter-form-grid-row"
+      >
         <ACol
           v-for="field in visibleFields"
           :key="field.formItem.name"
           :span="field.col?.span ?? colSpan"
         >
-          <RenderForm :form-state="formData" :fields="[field]" :on-auto-search="onAutoSearch" />
+          <RenderForm
+            :form-state="formData"
+            :fields="[field]"
+            :on-auto-search="handleAutoSearch"
+            :no-wrapper="true"
+          />
         </ACol>
 
         <!-- 操作按钮 -->
         <ACol :span="buttonColSpan ?? colSpan" class="filter-form-actions">
-          <ASpace>
+          <ASpace :size="8">
             <slot
               name="actions"
               :search="handleSearchImmediate"
@@ -224,7 +243,12 @@ const renderActions = () => {
       <!-- inline 布局 -->
       <template v-else>
         <template v-for="field in visibleFields" :key="field.formItem.name">
-          <RenderForm :form-state="formData" :fields="[field]" :on-auto-search="onAutoSearch" />
+          <RenderForm
+            :form-state="formData"
+            :fields="[field]"
+            :on-auto-search="handleAutoSearch"
+            :no-wrapper="true"
+          />
         </template>
 
         <AFormItem class="filter-form-actions-inline">
@@ -253,26 +277,32 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.filter-form {
-  margin-bottom: 16px;
-}
-
+/* ── 栅格操作按钮：与表单项底部对齐 ── */
 .filter-form-actions {
   display: flex;
   align-items: flex-end;
   padding-bottom: 24px;
 }
 
+/* ── 内联操作按钮：消除默认底部间距、与输入框底部对齐 ── */
 .filter-form-actions-inline {
+  margin-bottom: 0;
+  align-self: flex-end;
+}
+
+/* ── 栅格布局：去掉 AFormItem 默认底部边距，行间距由 ARow gutter 控制 ── */
+.filter-form-grid-row :deep(.ant-form-item) {
   margin-bottom: 0;
 }
 
-/* 操作按钮间距 */
-.filter-form-actions :deep(.ant-space) {
-  gap: 8px;
+/* ── 内联布局 FormItem 间距控制 ── */
+.filter-form :deep(.ant-form-inline .ant-form-item) {
+  margin-inline-end: 16px;
+  margin-bottom: 16px;
 }
 
-.filter-form-actions-inline :deep(.ant-space) {
-  gap: 8px;
+/* ── 内联布局最后一个 FormItem 不需要右边距 ── */
+.filter-form :deep(.ant-form-inline > .ant-form-item:last-child) {
+  margin-inline-end: 0;
 }
 </style>

@@ -3,6 +3,7 @@ import {
   Input as AInput,
   Select as ASelect,
   Checkbox as ACheckbox,
+  RadioGroup as ARadioGroup,
   Switch as ASwitch,
   DatePicker as ADatePicker,
 } from "antdv-next";
@@ -15,6 +16,7 @@ export const componentMap: Record<string, Component> = {
   AInput,
   ASelect,
   ACheckbox,
+  ARadioGroup,
   ASwitch,
   ATextarea: AInput.TextArea,
   ADatePicker,

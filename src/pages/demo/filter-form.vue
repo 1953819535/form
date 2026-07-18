@@ -113,7 +113,7 @@ const gridFilterFields: FilterField<GridFilterValues>[] = [
   },
   {
     formItem: { name: "createDate", label: "入职日期" },
-    component: { is: "ADatePicker", placeholder: "选择日期" },
+    component: { is: "ADatePicker", placeholder: "选择日期", style: { width: "100%" } },
   },
 ];
 
