@@ -113,7 +113,11 @@ const gridFilterFields: FilterField<GridFilterValues>[] = [
   },
   {
     formItem: { name: "createDate", label: "入职日期" },
-    component: { is: "ADatePicker", placeholder: "选择日期", style: { width: "100%" } },
+    component: {
+      is: "ADatePicker",
+      placeholder: "选择日期",
+      style: { width: "100%" },
+    },
   },
 ];
 
@@ -335,7 +339,6 @@ const handleCustomExport = () => {
 .demo-section {
   margin-bottom: 24px;
   padding: 16px;
-  background: #fafafa;
   border-radius: 4px;
 }
 

@@ -295,13 +295,17 @@ export default defineComponent({
   margin-bottom: 0;
 }
 
-/* ── 内联布局 FormItem 间距控制 ── */
-.filter-form :deep(.ant-form-inline .ant-form-item) {
-  margin-inline-end: 16px;
-  margin-bottom: 16px;
+/* ── 内联布局：用 row-gap 控制行间距，消除单行时的多余底部外边距 ── */
+.filter-form :deep(.ant-form-inline) {
+  row-gap: 16px;
 }
 
-/* ── 内联布局最后一个 FormItem 不需要右边距 ── */
+.filter-form :deep(.ant-form-inline .ant-form-item) {
+  margin-inline-end: 16px;
+  margin-bottom: 0;
+}
+
+/* ── inline 布局: 最后一个 FormItem 不需要右边距 ── */
 .filter-form :deep(.ant-form-inline > .ant-form-item:last-child) {
   margin-inline-end: 0;
 }
