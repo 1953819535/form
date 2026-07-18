@@ -5,14 +5,14 @@ import type {
   TransformParams,
   CrudErrorConfig,
   CRUD_OPERATION,
+  CrudApiState,
 } from "../types";
-import type { CrudStateInstance } from "./useCrudState";
 
 /**
  * API 操作相关逻辑
  */
 export function useCrudApi<T extends Record<string, any>>(
-  state: CrudStateInstance,
+  state: CrudApiState<T>,
   api: CrudApi<T>,
   filterTransform?: TransformParams,
   errorConfig?: CrudErrorConfig,

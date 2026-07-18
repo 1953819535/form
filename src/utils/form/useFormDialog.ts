@@ -25,7 +25,7 @@ export interface FormDialogProps {
 
 export function useFormDialog(
   props: FormDialogProps,
-  emit: (...args: any[]) => void,
+  emit: (event: "resolve" | "reject" | "close", ...args: any[]) => void,
   expose: (exposed: Record<string, any>) => void,
 ) {
   const open = ref(true);

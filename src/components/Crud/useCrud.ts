@@ -1,8 +1,11 @@
-import { onMounted, defineComponent, h } from "vue";
-import { useCrudState, useCrudApi, useCrudForm } from "./composables";
+import { onMounted, defineComponent, h, ref, type Ref } from "vue";
+import { useCrudApi, useCrudForm } from "./composables";
 import CrudComponent from "./CrudComponent.vue";
-import { DEFAULT_PAGE_SIZE_OPTIONS } from "./composables/useCrudState";
-import type { UseCrudOptions, UseCrudReturn } from "./types";
+import type {
+  UseCrudOptions,
+  UseCrudReturn,
+  PaginationState,
+} from "./types";
 
 /**
  * CRUD 组合式函数
@@ -51,23 +54,30 @@ export function useCrud<T extends Record<string, any>>(
   const paginationEnabled = paginationDisabled
     ? false
     : (paginationConfig?.enabled ?? true);
+  const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
   const pageSize = paginationDisabled ? 10 : (paginationConfig?.pageSize ?? 10);
   const pageSizeOptions: number[] = paginationDisabled
-    ? [...DEFAULT_PAGE_SIZE_OPTIONS]
-    : (paginationConfig?.pageSizeOptions ?? [...DEFAULT_PAGE_SIZE_OPTIONS]);
+    ? [...PAGE_SIZE_OPTIONS]
+    : (paginationConfig?.pageSizeOptions ?? [...PAGE_SIZE_OPTIONS]);
 
   // 错误配置
   const errorDisabled = errorConfig === false;
   const errorShow = errorDisabled ? false : (errorConfig?.show ?? true);
   const errorHandler = errorDisabled ? undefined : errorConfig?.handler;
 
-  // 状态管理
-  const state = useCrudState(pageSize);
-  const { loading, dataSource, selectedRows, pagination } = state;
+  // 状态
+  const loading = ref(false);
+  const dataSource = ref<T[]>([]) as Ref<T[]>;
+  const selectedRows = ref<T[]>([]) as Ref<T[]>;
+  const pagination = ref<PaginationState>({
+    current: 1,
+    pageSize,
+    total: 0,
+  });
 
   // API 操作
   const apiOps = useCrudApi<T>(
-    state,
+    { loading, dataSource, pagination },
     api,
     filterTransform,
     { show: errorShow, handler: errorHandler },

@@ -44,8 +44,10 @@ const DrawerContainer = defineComponent({
       const { slots: drawerSlotsConfig, ...restDrawerProps } =
         props.drawer || {};
       const resolvedDrawerSlots = normalizeSlots(drawerSlotsConfig) || {};
-      const { footer: _, ...otherSlots } = processSlotsWithScope(
-        resolvedDrawerSlots,
+      const { footer: userFooter, ...slotsWithoutFooter } =
+        resolvedDrawerSlots;
+      const otherSlots = processSlotsWithScope(
+        slotsWithoutFooter,
         slotScope.value,
       );
 
@@ -63,9 +65,9 @@ const DrawerContainer = defineComponent({
             },
             {
               default: renderForm,
-              footer: resolvedDrawerSlots.footer
+              footer: userFooter
                 ? (...args: any[]) =>
-                    (resolvedDrawerSlots.footer as Function)(
+                    (userFooter as Function)(
                       slotScope.value,
                       ...args,
                     )
