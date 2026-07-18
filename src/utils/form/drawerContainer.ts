@@ -1,8 +1,12 @@
-import { defineComponent, h, ref, computed, type PropType } from "vue";
-import { Drawer as ADrawer, Button as AButton, ConfigProvider as AConfigProvider } from "antdv-next";
+import { defineComponent, h, type PropType } from "vue";
+import {
+  Drawer as ADrawer,
+  Button as AButton,
+  ConfigProvider as AConfigProvider,
+} from "antdv-next";
 import type { DrawerConfig, SlotScope } from "./types";
 import { normalizeSlots, processSlotsWithScope } from "./renderHelper";
-import RenderForm from "./renderForm";
+import { useFormDialog } from "./useFormDialog";
 import { antdConfig } from "@/config/antdConfig";
 
 const DefaultFooter = ({ submit, cancel, loading }: SlotScope<any>) =>
@@ -30,97 +34,46 @@ const DrawerContainer = defineComponent({
   },
   emits: ["resolve", "reject", "close"],
   setup(props, { emit, expose }) {
-    const open = ref(true);
-
-    expose({
-      setOpen: (val: boolean) => {
-        open.value = val;
-      },
-      validate: () => renderFormRef.value?.formRef?.validate(),
-    });
-    const renderFormRef = ref<any>();
-    const loading = ref(false);
-
-    const handleSubmit = async () => {
-      loading.value = true;
-      try {
-        await renderFormRef.value?.handleSubmit();
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    const handleCancel = () => {
-      open.value = false;
-    };
-
-    const handleAfterClose = () => {
-      emit("close");
-    };
-
-    // slotScope：注入到 Drawer 非 default 插槽中
-    const slotScope = computed(() => ({
-      formData: props.formState,
-      submit: handleSubmit,
-      cancel: handleCancel,
-      loading: loading.value,
-    }));
+    const { open, handleCancel, slotScope, renderForm } = useFormDialog(
+      props,
+      emit,
+      expose,
+    );
 
     return () => {
       const { slots: drawerSlotsConfig, ...restDrawerProps } =
         props.drawer || {};
       const resolvedDrawerSlots = normalizeSlots(drawerSlotsConfig) || {};
-
-      return h(
-        AConfigProvider,
-        antdConfig,
-        {
-          default: () =>
-            h(
-              ADrawer,
-              {
-                ...restDrawerProps,
-                open: open.value,
-                onClose: handleCancel,
-                afterOpenChange: (isOpen: boolean) => {
-                  if (!isOpen) {
-                    handleAfterClose();
-                  }
-                },
-              },
-              {
-                default: () =>
-                  h(RenderForm, {
-                    ref: renderFormRef,
-                    formState: props.formState,
-                    fields: props.fields,
-                    rules: props.rules,
-                    form: props.form,
-                    onSubmit: props.onSubmit,
-                    onResolve: (data: any) => {
-                      open.value = false;
-                      emit("resolve", data);
-                    },
-                    onReject: (err: Error) => {
-                      open.value = false;
-                      emit("reject", err);
-                    },
-                  }),
-                footer: resolvedDrawerSlots.footer
-                  ? (...args: any[]) =>
-                      (resolvedDrawerSlots.footer as Function)(
-                        slotScope.value,
-                        ...args,
-                      )
-                  : () => DefaultFooter(slotScope.value),
-                ...(() => {
-                  const { footer: _, ...rest } = processSlotsWithScope(resolvedDrawerSlots, slotScope.value);
-                  return rest;
-                })(),
-              },
-            ),
-        },
+      const { footer: _, ...otherSlots } = processSlotsWithScope(
+        resolvedDrawerSlots,
+        slotScope.value,
       );
+
+      return h(AConfigProvider, antdConfig, {
+        default: () =>
+          h(
+            ADrawer,
+            {
+              ...restDrawerProps,
+              open: open.value,
+              onClose: handleCancel,
+              afterOpenChange: (isOpen: boolean) => {
+                if (!isOpen) emit("close");
+              },
+            },
+            {
+              default: renderForm,
+              footer: resolvedDrawerSlots.footer
+                ? (...args: any[]) =>
+                    (resolvedDrawerSlots.footer as Function)(
+                      slotScope.value,
+                      ...args,
+                    )
+                : () => DefaultFooter(slotScope.value),
+              ...otherSlots,
+            },
+          ),
+      });
     };
   },
 });

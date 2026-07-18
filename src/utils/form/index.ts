@@ -23,6 +23,10 @@ export type {
 export { createFormModal } from "./createFormModal";
 export { createFormDrawer } from "./createFormDrawer";
 
+// 共享 composable（供自定义容器扩展使用）
+export { useFormDialog } from "./useFormDialog";
+export type { FormDialogProps } from "./useFormDialog";
+
 // ──────────────────────────────────────────────────────────────
 // 工具函数
 // ──────────────────────────────────────────────────────────────
