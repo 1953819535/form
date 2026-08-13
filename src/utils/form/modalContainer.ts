@@ -21,6 +21,7 @@ const ModalContainer = defineComponent({
     rules: { type: [Object, Function] as PropType<any>, default: undefined },
     form: { type: [Object, Function] as PropType<any>, default: undefined },
     onSubmit: { type: Function as PropType<any>, default: undefined },
+    onClosed: { type: Function as PropType<() => void>, default: undefined },
   },
   emits: ["resolve", "reject", "close"],
   setup(props, { emit, expose }) {
@@ -45,7 +46,10 @@ const ModalContainer = defineComponent({
               confirmLoading: loading.value,
               onOk: handleSubmit,
               onCancel: handleCancel,
-              afterClose: () => emit("close"),
+              afterClose: () => {
+                emit("close");
+                props.onClosed?.();
+              },
             },
             {
               default: renderForm,

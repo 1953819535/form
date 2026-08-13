@@ -242,14 +242,12 @@ const renderActions = () => {
 
       <!-- inline 布局 -->
       <template v-else>
-        <template v-for="field in visibleFields" :key="field.formItem.name">
-          <RenderForm
-            :form-state="formData"
-            :fields="[field]"
-            :on-auto-search="handleAutoSearch"
-            :no-wrapper="true"
-          />
-        </template>
+        <RenderForm
+          :form-state="formData"
+          :fields="visibleFields"
+          :on-auto-search="handleAutoSearch"
+          :no-wrapper="true"
+        />
 
         <AFormItem class="filter-form-actions-inline">
           <ASpace :size="8">

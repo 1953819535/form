@@ -23,7 +23,7 @@ export interface CrudApi<T = any> {
   list: (params: {
     page: number;
     pageSize: number;
-    [key: string]: any;
+    [key: string]: unknown;
   }) => Promise<{
     data: T[];
     total: number;
@@ -34,8 +34,8 @@ export interface CrudApi<T = any> {
 }
 
 export type TransformParams = (
-  params: Record<string, any>,
-) => Record<string, any>;
+  params: Record<string, unknown>,
+) => Record<string, unknown>;
 
 export type TransformFormData<T = any> = (
   data: Partial<T>,
@@ -90,7 +90,7 @@ export interface CrudFormConfig<
 > {
   fields?: FormFieldsConfig<T>;
   type?: "modal" | "drawer";
-  props?: Record<string, any>;
+  props?: Record<string, unknown>;
   rules?: Record<string, any[]>;
   /** 表单数据转换，提交前处理 */
   transform?: TransformFormData<T>;
@@ -102,7 +102,7 @@ export interface CrudTableConfig<
   columns?: ColumnsConfig<T>;
   rowKey?: string | ((record: T) => string);
   selection?: "none" | "single" | "multiple";
-  props?: Record<string, any>;
+  props?: Record<string, unknown>;
   /** 是否显示表格内部 loading，默认 true。外部控制 loading 时可设为 false */
   loading?: boolean;
 }
@@ -200,7 +200,7 @@ export interface CrudComponentProps<
     columns?: TableColumnsType<T>;
     rowKey?: string | ((record: T) => string);
     selection?: "none" | "single" | "multiple";
-    props?: Record<string, any>;
+    props?: Record<string, unknown>;
     loading?: boolean;
   };
   paginationConfig?: {

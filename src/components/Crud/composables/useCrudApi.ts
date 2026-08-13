@@ -25,6 +25,7 @@ export function useCrudApi<T extends Record<string, any>>(
 ) {
   const { loading, dataSource, pagination } = state;
   const filterValues = ref<Record<string, any>>({});
+  let latestListRequest = 0;
 
   // 错误处理
   const handleError = (error: Error, operation: CRUD_OPERATION) => {
@@ -37,6 +38,7 @@ export function useCrudApi<T extends Record<string, any>>(
 
   // 加载数据
   const refresh = async () => {
+    const requestId = ++latestListRequest;
     loading.value = true;
     try {
       let params = {
@@ -51,14 +53,19 @@ export function useCrudApi<T extends Record<string, any>>(
       }
 
       const res = await api.list(params);
+      if (requestId !== latestListRequest) return;
       dataSource.value = res.data;
       pagination.value.total = res.total;
       callbacks?.onListSuccess?.(res.data, res.total);
     } catch (error) {
-      handleError(error as Error, "list");
-      callbacks?.onListError?.(error as Error);
+      if (requestId === latestListRequest) {
+        handleError(error as Error, "list");
+        callbacks?.onListError?.(error as Error);
+      }
     } finally {
-      loading.value = false;
+      if (requestId === latestListRequest) {
+        loading.value = false;
+      }
     }
   };
 
@@ -71,25 +78,25 @@ export function useCrudApi<T extends Record<string, any>>(
         message.success("删除成功");
       }
       callbacks?.onDeleteSuccess?.(id);
-      refresh();
+      await refresh();
     } catch (error) {
       handleError(error as Error, "delete");
     }
   };
 
   // 筛选搜索
-  const handleFilterSearch = (values: Record<string, any>) => {
+  const handleFilterSearch = async (values: Record<string, any>) => {
     filterValues.value = values;
     pagination.value.current = 1;
-    refresh();
+    await refresh();
   };
 
   // 分页变化
-  const handlePageChange = (page: number, newPageSize: number) => {
+  const handlePageChange = async (page: number, newPageSize: number) => {
     pagination.value.current = page;
     pagination.value.pageSize = newPageSize;
     callbacks?.onPageChange?.(page, newPageSize);
-    refresh();
+    await refresh();
   };
 
   return {

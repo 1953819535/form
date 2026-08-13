@@ -35,6 +35,12 @@ export const mountFormDialog = <T extends Record<string, any>>(
   const containerProps = {
     ...props,
     formState,
+    onClosed: () => {
+      if (cleanedUp) return;
+      cleanedUp = true;
+      app.unmount();
+      container.remove();
+    },
     onClose: () => {
       if (!settled) {
         settled = true;
@@ -55,21 +61,11 @@ export const mountFormDialog = <T extends Record<string, any>>(
     },
   };
 
+  let cleanedUp = false;
+
   const app = createApp(containerComponent, containerProps);
 
   app.mount(container);
-
-  // 弹窗关闭后清理
-  promise
-    .catch(() => {})
-    .finally(() => {
-      setTimeout(() => {
-        app.unmount();
-        if (container.parentNode) {
-          container.parentNode.removeChild(container);
-        }
-      }, 300);
-    });
 
   return {
     promise,

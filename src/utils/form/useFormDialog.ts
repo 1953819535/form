@@ -21,6 +21,7 @@ export interface FormDialogProps {
   rules?: any;
   form?: any;
   onSubmit?: any;
+  onClosed?: () => void;
 }
 
 export function useFormDialog(

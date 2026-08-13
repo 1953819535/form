@@ -14,7 +14,7 @@ import Layouts from "vite-plugin-vue-layouts"; // 👈 引入布局插件
 import tailwindcss from "@tailwindcss/vite";
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     VueRouter({
       // 排除生成路由的规则（基于 Picomatch 规范）
@@ -35,15 +35,15 @@ export default defineConfig({
       transformOn: true,
       mergeProps: true,
     }),
-    vueDevTools(),
+    mode === "development" && vueDevTools(),
     Components({
       resolvers: [AntdvNextResolver()],
     }),
     tailwindcss(),
-  ],
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
-});
+}));
